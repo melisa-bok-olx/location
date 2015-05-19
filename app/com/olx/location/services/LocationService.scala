@@ -59,5 +59,7 @@ class LocationService(mongoService: MongoService) {
     }
 
   }
+  
+  
 
 }
