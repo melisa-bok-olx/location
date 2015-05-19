@@ -1,0 +1,8 @@
+{
+    "database": "locations",
+    "connectTimeout": 1000,
+    "socketTimeout": 10000,
+    "servers": [
+    	"inv-mongo1.innovations.olx.com"
+    ]
+}

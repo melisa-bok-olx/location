@@ -1,0 +1,9 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET     /health                         				com.olx.location.controllers.LocationController.health
+
+# Create and update shops
+POST    /user/register               					com.olx.location.controllers.LocationController.registerUser
