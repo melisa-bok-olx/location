@@ -14,7 +14,8 @@ import com.olx.location.mongo.LocationPointModel
 
 trait MongoService {
 
-  def saveLocationUser(locationUser: LocationUserModel): Try[Option[ObjectId]]
+  def saveLocationUser(locationUser: LocationUserModel): Try[Option[LocationUserModel]]
+  def findLocationUser(email: String): Try[Option[LocationUserModel]]
 }
 
 class MongoServiceImpl(mongoDatabase: MongoDB) extends MongoService {
@@ -26,26 +27,37 @@ class MongoServiceImpl(mongoDatabase: MongoDB) extends MongoService {
 
   object LocationUserDAO extends SalatDAO[LocationUserModel, ObjectId](mongoDatabase("users"))
 
-  def saveLocationUser(locationUser: LocationUserModel): Try[Option[ObjectId]] = Try {
+  def saveLocationUser(locationUser: LocationUserModel): Try[Option[LocationUserModel]] = Try {
 
     LocationUserDAO.findOne(MongoDBObject("email" -> locationUser.email)) match {
 
       case Some(p) => {
-        
+
         val location = MongoDBObject("type" -> "Point", "coordinates" -> locationUser.lastLocation.coordinates)
-        
-        val toUpdate = MongoDBObject("email" -> locationUser.email, 
-            "deviceId" -> locationUser.deviceId, 
-            "lastLocation" -> location)
+
+        val toUpdate = MongoDBObject("email" -> locationUser.email,
+          "deviceId" -> locationUser.deviceId,
+          "lastLocation" -> location)
         val result = LocationUserDAO.update(q = MongoDBObject("_id" -> p.id),
           toUpdate,
           upsert = false,
           multi = false)
 
-        Some(p.id)
+        Some(p)
       }
-      case None => LocationUserDAO.insert(locationUser)
+      case None => {
+        LocationUserDAO.insert(locationUser) match {
+          case Some(id) => LocationUserDAO.findOneById(id)
+          case _ => None
+        }
+      }
     }
+
+  }
+
+  def findLocationUser(email: String): Try[Option[LocationUserModel]] = Try {
+
+    LocationUserDAO.findOne(MongoDBObject("email" -> email))
 
   }
 

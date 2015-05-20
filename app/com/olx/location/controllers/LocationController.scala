@@ -15,16 +15,15 @@ object LocationController extends Controller with LocationController {
   val locationService = LocationService()
 }
 
-trait LocationController extends RequestReads with ResponseWrites{
+trait LocationController extends RequestReads with ResponseWrites {
 
   this: Controller =>
   val locationService: LocationService
 
-  
   def health = Action { request =>
     Ok("")
   }
-  
+
   def registerUser = Action.async(parse.json) { request =>
 
     val locationUser = request.body.validate[LocationUser]
@@ -43,9 +42,16 @@ trait LocationController extends RequestReads with ResponseWrites{
       })
 
   }
-  
+
   def updateLocation(email: String, latitude: Double, longitude: Double) = Action.async { request =>
-    Future.successful(Ok(""))
+
+    locationService.updateUserLocation(email, latitude, longitude).map { response =>
+      response match {
+        case Right(r) => Ok(Json.toJson(r))
+        case Left(e: Exception) => InternalServerError(Json.obj("status" -> "KO", "message" -> e.getMessage()))
+      }
+    }
+
   }
 
 }

@@ -10,6 +10,8 @@ import com.mongodb.casbah.MongoClient
 import com.mongodb.casbah.ReadPreference
 import play.api.libs.json.Json
 import com.mongodb.ServerAddress
+import com.olx.location.mongo.LocationPointModel
+import com.olx.location.mongo.LocationUserModel
 
 object LocationService {
 
@@ -35,20 +37,24 @@ object LocationService {
 
     new LocationService(mongoService)
   }
-  
+
   def apply(mongoService: MongoService): LocationService = new LocationService(mongoService)
-  
+
 }
 
 class LocationService(mongoService: MongoService) {
 
-  def registerUser(locationUser: LocationUser): Future[Either[Exception, LocationUser]] = {
+  private def saveUser(user: LocationUserModel): Future[Either[Exception, LocationUser]] = {
 
-    mongoService.saveLocationUser(locationUser.toLocationUserModel) match {
+    mongoService.saveLocationUser(user) match {
 
-      case Success(Some(id)) => Future.successful(Right(locationUser))
+      case Success(Some(locationUser)) => Future.successful(Right(
+        LocationUser(locationUser.email,
+          locationUser.deviceId,
+          locationUser.lastLocation.coordinates(1),
+          locationUser.lastLocation.coordinates(0))))
       case Success(None) => {
-        Logger.error("Could not save the location user: " + locationUser)
+        Logger.error("Could not save the location user: " + user.email)
         Future.successful(Left(new Exception("Could not save the location user")))
       }
       case Failure(e) => {
@@ -57,9 +63,30 @@ class LocationService(mongoService: MongoService) {
       }
 
     }
+  }
+
+  def registerUser(locationUser: LocationUser): Future[Either[Exception, LocationUser]] = {
+
+    saveUser(locationUser.toLocationUserModel)
 
   }
-  
-  
+
+  def updateUserLocation(email: String, latitude: Double, longitude: Double): Future[Either[Exception, LocationUser]] = {
+
+    mongoService.findLocationUser(email) match {
+      case Success(Some(user)) => {
+        val toUpdateUser = user.copy(lastLocation = LocationPointModel(coordinates = List(longitude, latitude)))
+        saveUser(toUpdateUser)
+      }
+      case Success(None) => {
+        Logger.error("User not found: " + email)
+        Future.successful(Left(new Exception("User not found")))
+      }
+      case Failure(e) => {
+        Logger.error("There was an error saving the location user", e)
+        Future.successful(Left(new Exception(e)))
+      }
+    }
+  }
 
 }
