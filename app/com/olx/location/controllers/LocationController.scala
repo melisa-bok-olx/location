@@ -9,22 +9,26 @@ import play.api.libs.json.JsError
 import play.api.libs.json.Json
 import play.api.mvc._
 import com.olx.location.models.ResponseWrites
+import helpers._
+import com.olx.location.driver.GraphiteClient
 
 object LocationController extends Controller with LocationController {
 
   val locationService = LocationService()
+  val graphiteClient = GraphiteClient()
 }
 
 trait LocationController extends RequestReads with ResponseWrites {
 
   this: Controller =>
   val locationService: LocationService
+  implicit val graphiteClient: GraphiteClient
 
   def health = Action { request =>
     Ok("")
   }
 
-  def registerUser = Action.async(parse.json) { request =>
+  def registerUser = Logging("location.registerUser", Action.async(parse.json) { implicit request =>
 
     val locationUser = request.body.validate[LocationUser]
 
@@ -41,9 +45,9 @@ trait LocationController extends RequestReads with ResponseWrites {
         }
       })
 
-  }
+  })
 
-  def updateLocation(email: String, latitude: Double, longitude: Double) = Action.async { request =>
+  def updateLocation(email: String, latitude: Double, longitude: Double) = Logging("location.updateLocation", Action.async { request =>
 
     locationService.updateUserLocation(email, latitude, longitude).map { response =>
       response match {
@@ -52,9 +56,9 @@ trait LocationController extends RequestReads with ResponseWrites {
       }
     }
 
-  }
+  })
   
-  def getUser(email: String) = Action.async { request =>
+  def getUser(email: String) = Logging("location.getUser", Action.async { request =>
     
     locationService.getUser(email).map { response =>
       response match {
@@ -63,9 +67,9 @@ trait LocationController extends RequestReads with ResponseWrites {
       }
     }
     
-  }
+  })
   
-  def getUserLocations(email: String, pageSize: Int, offset: Int) = Action.async { request =>
+  def getUserLocations(email: String, pageSize: Int, offset: Int) = Logging("location.getUserLocations", Action.async { request =>
     
     locationService.getUserLocations(email, pageSize, offset).map { response =>
       response match {
@@ -74,7 +78,7 @@ trait LocationController extends RequestReads with ResponseWrites {
       }
     }
     
-  }  
+  })  
   
 
 }
