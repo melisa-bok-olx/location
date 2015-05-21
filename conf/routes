@@ -6,9 +6,9 @@
 GET     /health                         				com.olx.location.controllers.LocationController.health
 
 # Create and update users
-POST    /user			               					com.olx.location.controllers.LocationController.registerUser
-POST    /user/:email/location         					com.olx.location.controllers.LocationController.updateLocation(email: String, latitude: Double, longitude: Double)
+POST    /locations/users			               					com.olx.location.controllers.LocationController.registerUser
+POST    /locations/users/:email/location         					com.olx.location.controllers.LocationController.updateLocation(email: String, latitude: Double, longitude: Double)
 
-GET    /user/:email               						com.olx.location.controllers.LocationController.getUser(email: String)
-GET    /user/:email/location       						com.olx.location.controllers.LocationController.getUserLocations(email: String, pageSize: Int ?= 100, offset: Int ?= 0)
+GET    /locations/users/:email               						com.olx.location.controllers.LocationController.getUser(email: String)
+GET    /locations/users/:email/location       					com.olx.location.controllers.LocationController.getUserLocations(email: String, pageSize: Int ?= 100, offset: Int ?= 0)
 

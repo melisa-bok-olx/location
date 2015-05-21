@@ -11,6 +11,7 @@ import play.api.mvc._
 import com.olx.location.models.ResponseWrites
 import helpers._
 import com.olx.location.driver.GraphiteClient
+import play.api.Logger
 
 object LocationController extends Controller with LocationController {
 
@@ -30,6 +31,8 @@ trait LocationController extends RequestReads with ResponseWrites {
 
   def registerUser = Logging("location.registerUser", Action.async(parse.json) { implicit request =>
 
+    Logger.info("Register user")
+    
     val locationUser = request.body.validate[LocationUser]
 
     locationUser.fold(
@@ -49,6 +52,8 @@ trait LocationController extends RequestReads with ResponseWrites {
 
   def updateLocation(email: String, latitude: Double, longitude: Double) = Logging("location.updateLocation", Action.async { request =>
 
+    Logger.info("Update location")
+    
     locationService.updateUserLocation(email, latitude, longitude).map { response =>
       response match {
         case Right(r) => Ok(Json.toJson(r))
