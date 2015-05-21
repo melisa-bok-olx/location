@@ -15,6 +15,7 @@ import com.olx.location.mongo.LocationUserModel
 import com.olx.location.mongo.LocationTrackModel
 import com.olx.location.models.LocationTracks
 import com.olx.location.models.Location
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object LocationService {
 
@@ -49,22 +50,24 @@ class LocationService(mongoService: MongoService) {
 
   private def saveUser(user: LocationUserModel): Future[Either[Exception, LocationUser]] = {
 
-    mongoService.saveLocationUser(user) match {
+    mongoService.saveLocationUser(user).map { response =>
 
-      case Success(Some(locationUser)) => Future.successful(Right(
-        LocationUser(locationUser.email,
-          locationUser.deviceId,
-          locationUser.lastLocation.coordinates(1),
-          locationUser.lastLocation.coordinates(0))))
-      case Success(None) => {
-        Logger.error("Could not save the location user: " + user.email)
-        Future.successful(Left(new Exception("Could not save the location user")))
-      }
-      case Failure(e) => {
-        Logger.error("There was an error saving the location user", e)
-        Future.successful(Left(new Exception("There was an error saving the location user")))
-      }
+      response match {
+        case Success(Some(locationUser)) => Right(
+          LocationUser(locationUser.email,
+            locationUser.deviceId,
+            locationUser.lastLocation.coordinates(1),
+            locationUser.lastLocation.coordinates(0)))
+        case Success(None) => {
+          Logger.error("Could not save the location user: " + user.email)
+          Left(new Exception("Could not save the location user"))
+        }
+        case Failure(e) => {
+          Logger.error("There was an error saving the location user", e)
+          Left(new Exception("There was an error saving the location user"))
+        }
 
+      }
     }
   }
 
@@ -76,58 +79,64 @@ class LocationService(mongoService: MongoService) {
 
   def updateUserLocation(email: String, latitude: Double, longitude: Double): Future[Either[Exception, LocationUser]] = {
 
-    mongoService.findLocationUser(email) match {
-      case Success(Some(user)) => {
-        val toUpdateUser = user.copy(lastLocation = LocationPointModel(coordinates = List(longitude, latitude)))
-        //Track location
-        mongoService.saveLocationTrack(LocationTrackModel(email = email, location = toUpdateUser.lastLocation))
-        saveUser(toUpdateUser)
-      }
-      case Success(None) => {
-        Logger.error("User not found: " + email)
-        Future.successful(Left(new Exception("User not found")))
-      }
-      case Failure(e) => {
-        Logger.error("There was an error saving the location user", e)
-        Future.successful(Left(new Exception(e)))
+    mongoService.findLocationUser(email).flatMap { response =>
+      response match {
+        case Success(Some(user)) => {
+          val toUpdateUser = user.copy(lastLocation = LocationPointModel(coordinates = List(longitude, latitude)))
+          //Track location
+          mongoService.saveLocationTrack(LocationTrackModel(email = email, location = toUpdateUser.lastLocation))
+          saveUser(toUpdateUser)
+        }
+        case Success(None) => {
+          Logger.error("User not found: " + email)
+          Future.successful(Left(new Exception("User not found")))
+        }
+        case Failure(e) => {
+          Logger.error("There was an error saving the location user", e)
+          Future.successful(Left(new Exception(e)))
+        }
       }
     }
   }
-  
+
   def getUser(email: String): Future[Either[Exception, LocationUser]] = {
-    
-    mongoService.findLocationUser(email) match {
-      case Success(Some(locationUser)) => Future.successful(Right(
-        LocationUser(locationUser.email,
-          locationUser.deviceId,
-          locationUser.lastLocation.coordinates(1),
-          locationUser.lastLocation.coordinates(0))))
-      case Success(None) => {
-        Logger.error("Could not find the location user: " + email)
-        Future.successful(Left(new Exception("Could not find the location user")))
-      }
-      case Failure(e) => {
-        Logger.error("There was an error finding the location user", e)
-        Future.successful(Left(new Exception("There was an error finding the location user")))
+
+    mongoService.findLocationUser(email).map { response =>
+      response match {
+        case Success(Some(locationUser)) => Right(
+          LocationUser(locationUser.email,
+            locationUser.deviceId,
+            locationUser.lastLocation.coordinates(1),
+            locationUser.lastLocation.coordinates(0)))
+        case Success(None) => {
+          Logger.error("Could not find the location user: " + email)
+          Left(new Exception("Could not find the location user"))
+        }
+        case Failure(e) => {
+          Logger.error("There was an error finding the location user", e)
+          Left(new Exception("There was an error finding the location user"))
+        }
       }
     }
   }
-  
+
   def getUserLocations(email: String, pageSize: Int, offset: Int): Future[Either[Exception, LocationTracks]] = {
-    
-    mongoService.findLocationTracks(email, pageSize, offset) match {
-      case Success(tracks) => {
-        val locations = tracks.map(t => Location(
-        t.id.getTimestamp(), 
-        t.location.coordinates(1), 
-        t.location.coordinates(0)))
-        Future.successful(Right(LocationTracks(email, locations)))
-      }
-      case Failure(e) => {
-        Logger.error("There was an error finding the user tracks", e)
-        Future.successful(Left(new Exception("There was an error finding the user tracks")))
+
+    mongoService.findLocationTracks(email, pageSize, offset).map { response =>
+      response match {
+        case Success(tracks) => {
+          val locations = tracks.map(t => Location(
+            t.id.getTimestamp(),
+            t.location.coordinates(1),
+            t.location.coordinates(0)))
+          Right(LocationTracks(email, locations))
+        }
+        case Failure(e) => {
+          Logger.error("There was an error finding the user tracks", e)
+          Left(new Exception("There was an error finding the user tracks"))
+        }
       }
     }
-  }  
+  }
 
 }
