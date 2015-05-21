@@ -12,6 +12,7 @@ import play.api.libs.json.Json
 import com.mongodb.ServerAddress
 import com.olx.location.mongo.LocationPointModel
 import com.olx.location.mongo.LocationUserModel
+import com.olx.location.mongo.LocationTrackModel
 
 object LocationService {
 
@@ -76,6 +77,8 @@ class LocationService(mongoService: MongoService) {
     mongoService.findLocationUser(email) match {
       case Success(Some(user)) => {
         val toUpdateUser = user.copy(lastLocation = LocationPointModel(coordinates = List(longitude, latitude)))
+        //Track location
+        mongoService.saveLocationTrack(LocationTrackModel(email = email, location = toUpdateUser.lastLocation))
         saveUser(toUpdateUser)
       }
       case Success(None) => {
@@ -85,6 +88,25 @@ class LocationService(mongoService: MongoService) {
       case Failure(e) => {
         Logger.error("There was an error saving the location user", e)
         Future.successful(Left(new Exception(e)))
+      }
+    }
+  }
+  
+  def getUser(email: String): Future[Either[Exception, LocationUser]] = {
+    
+    mongoService.findLocationUser(email) match {
+      case Success(Some(locationUser)) => Future.successful(Right(
+        LocationUser(locationUser.email,
+          locationUser.deviceId,
+          locationUser.lastLocation.coordinates(1),
+          locationUser.lastLocation.coordinates(0))))
+      case Success(None) => {
+        Logger.error("Could not find the location user: " + email)
+        Future.successful(Left(new Exception("Could not find the location user")))
+      }
+      case Failure(e) => {
+        Logger.error("There was an error finding the location user", e)
+        Future.successful(Left(new Exception("There was an error finding the location user")))
       }
     }
   }

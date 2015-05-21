@@ -10,3 +10,5 @@ case class LocationUserModel(@Key("_id")id: ObjectId = new ObjectId,
     email: String, 
     deviceId: String, 
     lastLocation: LocationPointModel)
+    
+case class LocationTrackModel(@Key("_id")id: ObjectId = new ObjectId, email: String, location: LocationPointModel)

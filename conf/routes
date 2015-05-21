@@ -5,5 +5,9 @@
 # Home page
 GET     /health                         				com.olx.location.controllers.LocationController.health
 
-# Create and update shops
+# Create and update users
 POST    /user/register               					com.olx.location.controllers.LocationController.registerUser
+
+GET    /user/:email               						com.olx.location.controllers.LocationController.getUser(email: String)
+
+POST    /user/:email/track            					com.olx.location.controllers.LocationController.updateLocation(email: String, latitude: Double, longitude: Double)

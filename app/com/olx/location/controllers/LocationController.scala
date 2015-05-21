@@ -53,5 +53,17 @@ trait LocationController extends RequestReads with ResponseWrites {
     }
 
   }
+  
+  def getUser(email: String) = Action.async { request =>
+    
+    locationService.getUser(email).map { response =>
+      response match {
+        case Right(r) => Ok(Json.toJson(r))
+        case Left(e: Exception) => InternalServerError(Json.obj("status" -> "KO", "message" -> e.getMessage()))
+      }
+    }
+    
+  }
+  
 
 }
