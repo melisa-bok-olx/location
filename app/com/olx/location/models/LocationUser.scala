@@ -15,3 +15,6 @@ case class LocationUser(email: String, deviceId: String, latitude: Double, longi
     
   }
 }
+
+case class Location(datetime: Long, latitude: Double, longitude: Double)
+case class LocationTracks(email: String, locations: List[Location])

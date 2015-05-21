@@ -20,6 +20,29 @@ trait ResponseWrites {
     		  "longitude" -> locationUser.longitude 
       )
     }
+  }
+  
+  implicit val locationWrites = new Writes[Location] {
+    
+    def writes(location: Location): JsValue = {
+      
+      Json.obj(
+    		  "datetime" -> location.datetime,
+    		  "latitude" -> location.latitude, 
+    		  "longitude" -> location.longitude
+      )
+    }
+  }  
+  
+  implicit val locationTracksWrites = new Writes[LocationTracks] {
+    
+    def writes(locationTracks: LocationTracks): JsValue = {
+      
+      Json.obj(
+    		  "email" -> locationTracks.email ,
+    		  "locations" -> locationTracks.locations
+      )
+    }
   }  
   
 

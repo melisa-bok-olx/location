@@ -13,6 +13,8 @@ import com.mongodb.ServerAddress
 import com.olx.location.mongo.LocationPointModel
 import com.olx.location.mongo.LocationUserModel
 import com.olx.location.mongo.LocationTrackModel
+import com.olx.location.models.LocationTracks
+import com.olx.location.models.Location
 
 object LocationService {
 
@@ -110,5 +112,22 @@ class LocationService(mongoService: MongoService) {
       }
     }
   }
+  
+  def getUserLocations(email: String, pageSize: Int, offset: Int): Future[Either[Exception, LocationTracks]] = {
+    
+    mongoService.findLocationTracks(email, pageSize, offset) match {
+      case Success(tracks) => {
+        val locations = tracks.map(t => Location(
+        t.id.getTimestamp(), 
+        t.location.coordinates(1), 
+        t.location.coordinates(0)))
+        Future.successful(Right(LocationTracks(email, locations)))
+      }
+      case Failure(e) => {
+        Logger.error("There was an error finding the user tracks", e)
+        Future.successful(Left(new Exception("There was an error finding the user tracks")))
+      }
+    }
+  }  
 
 }
