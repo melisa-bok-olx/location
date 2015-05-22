@@ -26,7 +26,7 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala).settings(
 	publishArtifact in Test := false,
 	publishArtifact in (Compile, packageDoc) := false,
 	publishArtifact in (Compile, packageSrc) := false,
-	publishTo := Some("Artifactory Realm" at "http://artifactory.innovations.olx.com:8081/artifactory/location")
+	publishTo := Some("Artifactory Realm" at "http://artifactory.innovations.olx.com:8081/artifactory/locations")
 )
 
 scalaVersion := "2.11.6"
