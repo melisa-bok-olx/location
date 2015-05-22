@@ -18,15 +18,15 @@ libraryDependencies ++= Seq(
 )
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala).settings(
-	credentials += Credentials("Artifactory Realm", "luigi.apps.olx.com", "admin", "PypW2Hkm0SP5"),
-	resolvers ++= Seq("Artifactory Snapshot" at "http://luigi.apps.olx.com/artifactory/libs-snapshot",
-	"Artifactory Release" at "http://luigi.apps.olx.com/artifactory/libs-release",
+	credentials += Credentials("Artifactory Realm", "artifactory.innovations.olx.com", "admin", "PypW2Hkm0SP5"),
+	resolvers ++= Seq("Artifactory Snapshot" at "http://artifactory.innovations.olx.com:8081/artifactory/libs-snapshot",
+	"Artifactory Release" at "http://artifactory.innovations.olx.com:8081/artifactory/libs-release",
 	"Apache Snapshot" at "https://repository.apache.org/snapshots/",
 	"Lucene Snapshot" at "https://download.elasticsearch.org/lucenesnapshots/1652032"),
 	publishArtifact in Test := false,
 	publishArtifact in (Compile, packageDoc) := false,
 	publishArtifact in (Compile, packageSrc) := false,
-	publishTo := Some("Artifactory Realm" at "http://luigi.apps.olx.com/artifactory/location")
+	publishTo := Some("Artifactory Realm" at "http://artifactory.innovations.olx.com:8081/artifactory/location")
 )
 
 scalaVersion := "2.11.6"
